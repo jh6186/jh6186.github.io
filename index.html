@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>귀여운 동물 타자 연습</title>
+    <!-- Google AdSense Script -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6412479119627050"
+     crossorigin="anonymous"></script>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for cute font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for background music -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Apply custom font and background */
+        body {
+            font-family: 'Gaegu', cursive;
+            background-color: #e0f2fe; /* Light sky blue */
+            /* Complex cloud background */
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.7) 3%, transparent 4%),
+                radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.7) 3.5%, transparent 4%),
+                radial-gradient(circle at 45% 80%, rgba(255, 255, 255, 0.7) 2.5%, transparent 3%),
+                radial-gradient(circle at 5% 20%, rgba(255, 255, 255, 0.7) 3%, transparent 4%),
+                radial-gradient(circle at 95% 70%, rgba(255, 255, 255, 0.7) 2%, transparent 2.5%);
+            background-size: 40em 40em, 50em 50em, 30em 30em, 60em 60em, 35em 35em;
+            background-repeat: no-repeat;
+        }
+
+        .game-container {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            position: relative;
+        }
+        
+        #word-display {
+            font-size: 2.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        #word-input {
+            font-size: 1.5rem;
+        }
+
+        /* Animation for correct word completion */
+        .correct-animation { animation: correct 0.5s ease-in-out; }
+        @keyframes correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Animation for incorrect input */
+        @keyframes shake {
+          10%, 90% { transform: translateX(-1px); }
+          20%, 80% { transform: translateX(2px); }
+          30%, 50%, 70% { transform: translateX(-4px); }
+          40%, 60% { transform: translateX(4px); }
+        }
+        .shake-animation {
+            animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* --- Rabbit Character Styles --- */
+        #character {
+            width: 80px;
+            height: 80px;
+            background-color: #f1f5f9;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+            margin: 20px auto 0 auto;
+            border: 4px solid #e11d48;
+        }
+        #character::before, #character::after {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 60px;
+            background: #f1f5f9;
+            border: 4px solid #e11d48;
+            border-bottom: none;
+            border-radius: 50% 50% 0 0;
+            top: -45px;
+        }
+        #character::before { left: 5px; transform: rotate(-20deg); }
+        #character::after { right: 5px; transform: rotate(20deg); }
+        #character-eyes { position: absolute; top: 45%; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; }
+        .eye { width: 8px; height: 12px; background-color: #333; border-radius: 50%; }
+        #character-mouth { width: 25px; height: 12px; border: 3px solid #333; border-top-color: transparent; border-radius: 0 0 25px 25px; position: absolute; bottom: 25%; left: 50%; transform: translateX(-50%); }
+        .item-slot { position: absolute; width: 100%; height: 100%; top: 0; left: 0; }
+        .hat-style-1 { width: 50px; height: 20px; background-color: #ef4444; border-radius: 10px 10px 0 0; position: absolute; top: -18px; left: 50%; transform: translateX(-50%) rotate(-5deg); border: 3px solid #b91c1c; }
+        .glasses-style-1 { width: 70px; height: 20px; border: 5px solid #000; border-radius: 15px; position: absolute; top: 35%; left: 50%; transform: translateX(-50%); }
+
+        .coin-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #f59e0b;
+            font-size: 1.75rem;
+            font-weight: bold;
+            animation: float-up 1s ease-out forwards;
+            white-space: nowrap;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        @keyframes float-up {
+            from { opacity: 1; transform: translate(-50%, -50%); }
+            to { opacity: 0; transform: translate(-50%, -150%); }
+        }
+
+        /* --- Keyboard Styles --- */
+        #keyboard {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #cbd5e1;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .key {
+            background-color: #f8fafc;
+            color: #475569;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            min-width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-bottom: 3px solid #94a3b8;
+            transition: all 0.1s ease;
+            cursor: pointer;
+        }
+        .key:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+        .key[data-key="space"] {
+            min-width: 12rem;
+        }
+        .key.key-highlight {
+            background-color: #fef08a; /* Bright yellow for highlight */
+            border-color: #facc15;
+            color: #ca8a04;
+            transform: translateY(-2px);
+        }
+        .key.key-highlight:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+        .key-active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="game-container text-center p-4 md:p-6 bg-white/70 rounded-3xl shadow-2xl max-w-5xl w-full">
+        <button id="music-toggle-btn" class="absolute top-4 right-4 text-3xl hover:scale-110 transition-transform">🔈</button>
+        <h1 class="text-4xl md:text-5xl font-bold text-sky-600 mb-2">귀여운 동물 타자 연습</h1>
+        <p class="text-gray-500 mb-4 text-lg">동물 친구들과 함께 타자 실력을 키워봐요!</p>
+
+        <!-- Level Selection Screen -->
+        <div id="level-selection" class="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mb-6">
+            <button data-level="easy" class="level-btn bg-green-400 hover:bg-green-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 text-xl">🐣 쪼꼬미 (단어)</button>
+            <button data-level="medium" class="level-btn bg-yellow-400 hover:bg-yellow-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 text-xl">🐰 쫑알쫑알 (짧은 글)</button>
+            <button data-level="hard" class="level-btn bg-red-400 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-full transition-transform transform hover:scale-105 text-xl">🦁 척척박사 (긴 글)</button>
+        </div>
+
+        <!-- Main Game Area (initially hidden) -->
+        <div id="game-area" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <!-- Character & Coins -->
+                <div class="bg-rose-100 p-4 rounded-xl flex flex-col items-center justify-center relative min-h-[200px]">
+                    <div id="coin-effect-container" class="absolute inset-0 pointer-events-none z-10"></div>
+                    <div id="character">
+                        <div id="character-eyes"><div class="eye"></div><div class="eye"></div></div>
+                        <div id="character-mouth"></div>
+                        <div id="hat-slot" class="item-slot"></div>
+                        <div id="glasses-slot" class="item-slot"></div>
+                    </div>
+                    <div class="mt-3 text-rose-800 text-xl font-bold">💰 <span id="coin-display">0</span> 코인</div>
+                    <button id="shop-open-btn" class="mt-2 bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-4 rounded-full text-sm">꾸미기</button>
+                </div>
+
+                <!-- Stats -->
+                <div class="col-span-1 md:col-span-2 bg-sky-100 rounded-xl p-4 grid grid-cols-2 gap-4 text-sky-800 text-lg md:text-xl content-center">
+                    <div>정확도: <span id="accuracy" class="font-bold">100</span>%</div>
+                    <div>타수: <span id="wpm" class="font-bold">0</span></div>
+                </div>
+            </div>
+
+            <!-- Image Display Area -->
+            <div id="image-display" class="text-7xl mb-2 min-h-[80px] flex items-center justify-center"></div>
+
+            <div id="word-display-container" class="bg-white p-6 md:p-8 rounded-2xl shadow-inner mb-4 min-h-[120px] flex items-center justify-center">
+                <div id="word-display" class="font-bold text-gray-700 leading-relaxed">레벨을 선택하고 시작하세요!</div>
+            </div>
+
+            <input type="text" id="word-input" class="w-full p-4 border-4 border-sky-300 rounded-xl text-center focus:outline-none focus:border-sky-500 transition" placeholder="여기에 따라치고 Enter!" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled>
+            <div id="warning-message" class="text-red-500 font-bold mt-2 h-6 text-xl"></div>
+            
+            <!-- Visual Keyboard -->
+            <div id="keyboard">
+                <div class="keyboard-row">
+                    <div class="key" data-key="q">ㅂ</div><div class="key" data-key="w">ㅈ</div><div class="key" data-key="e">ㄷ</div><div class="key" data-key="r">ㄱ</div><div class="key" data-key="t">ㅅ</div><div class="key" data-key="y">ㅛ</div><div class="key" data-key="u">ㅕ</div><div class="key" data-key="i">ㅑ</div><div class="key" data-key="o">ㅐ</div><div class="key" data-key="p">ㅔ</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key" data-key="a">ㅁ</div><div class="key" data-key="s">ㄴ</div><div class="key" data-key="d">ㅇ</div><div class="key" data-key="f">ㄹ</div><div class="key" data-key="g">ㅎ</div><div class="key" data-key="h">ㅗ</div><div class="key" data-key="j">ㅓ</div><div class="key" data-key="k">ㅏ</div><div class="key" data-key="l">ㅣ</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key" data-key="shift">Shift</div><div class="key" data-key="z">ㅋ</div><div class="key" data-key="x">ㅌ</div><div class="key" data-key="c">ㅊ</div><div class="key" data-key="v">ㅍ</div><div class="key" data-key="b">ㅠ</div><div class="key" data-key="n">ㅜ</div><div class="key" data-key="m">ㅡ</div><div class="key" data-key="shift">Shift</div>
+                </div>
+                <div class="keyboard-row">
+                    <div class="key" data-key="space">Space</div>
+                </div>
+            </div>
+
+            <button id="restart-btn" class="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xl transition-transform transform hover:scale-105">다른 레벨 선택</button>
+        </div>
+    </div>
+
+    <!-- Modals (Message Box & Shop) -->
+    <div id="message-box" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-lg text-center" id="message-content">
+            <h2 id="message-title" class="text-3xl font-bold mb-4"></h2>
+            <p id="message-text" class="text-lg mb-6"></p>
+            <button id="message-close-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-full">확인</button>
+        </div>
+    </div>
+    <div id="shop-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div class="bg-amber-50 w-full max-w-2xl p-6 rounded-2xl shadow-lg text-center relative">
+            <h2 class="text-3xl font-bold text-amber-800 mb-4">✨ 꾸미기 상점 ✨</h2>
+            <p class="text-lg text-amber-700 font-bold mb-4">💰 <span id="shop-coin-display">0</span> 코인</p>
+            <div id="shop-items-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto p-2"></div>
+            <button id="shop-close-btn" class="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold w-8 h-8 rounded-full text-lg">X</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const levelSelection = document.getElementById('level-selection');
+        const gameArea = document.getElementById('game-area');
+        const wordDisplay = document.getElementById('word-display');
+        const imageDisplay = document.getElementById('image-display');
+        const wordInput = document.getElementById('word-input');
+        const warningMessage = document.getElementById('warning-message');
+        const accuracyEl = document.getElementById('accuracy');
+        const wpmEl = document.getElementById('wpm');
+        const restartBtn = document.getElementById('restart-btn');
+        const messageBox = document.getElementById('message-box');
+        const messageCloseBtn = document.getElementById('message-close-btn');
+        const coinDisplay = document.getElementById('coin-display');
+        const shopCoinDisplay = document.getElementById('shop-coin-display');
+        const shopOpenBtn = document.getElementById('shop-open-btn');
+        const shopModal = document.getElementById('shop-modal');
+        const shopCloseBtn = document.getElementById('shop-close-btn');
+        const shopItemsGrid = document.getElementById('shop-items-grid');
+        const hatSlot = document.getElementById('hat-slot');
+        const glassesSlot = document.getElementById('glasses-slot');
+        const musicToggleBtn = document.getElementById('music-toggle-btn');
+        const keyboardKeys = document.querySelectorAll('.key');
+
+        // --- Word, Emoji & Shop Data ---
+        const words = {
+            easy: ['개', '곰', '소', '말', '양', '쥐', '닭', '용', '뱀', '토끼', '고양이', '강아지', '병아리', '송아지', '사자', '호랑이', '코끼리', '기린', '하마', '악어', '원숭이', '다람쥐', '펭귄', '얼룩말'],
+            medium: ['깡충깡충 토끼가 뛰어놀아요.', '귀여운 아기 고양이가 잠을 자요.', '어미 닭이 병아리들을 품고 있어요.', '코끼리가 긴 코로 물을 뿜어요.', '다람쥐가 도토리를 맛있게 먹어요.', '얼룩말의 줄무늬가 멋져요.', '아기 곰이 엄마 곰을 따라가요.', '목이 긴 기린이 나뭇잎을 먹어요.', '연못 속 개구리가 노래를 불러요.', '뒤뚱뒤뚱 펭귄들이 걸어가요.'],
+            hard: ['깊은 숲속 작은 공터에서 동물 친구들이 모여 음악회를 열었어요.', '노래를 가장 잘하는 꾀꼬리가 아름다운 목소리로 노래를 시작했어요.', '그러자 풀벌레들이 예쁜 화음을 넣었고, 딱따구리는 나무를 쪼며 신나는 리듬을 만들었답니다.', '폴짝폴짝 개구리들은 합창을 하고, 덩치 큰 곰 아저씨는 멋진 춤을 추었어요.', '숲속의 모든 동물들이 함께 즐기는 정말 멋진 음악회였답니다.']
+        };
+        const wordToEmoji = {
+            '개': '🐶', '곰': '🐻', '소': '🐮', '말': '🐴', '양': '🐑', '쥐': '🐭', '닭': '🐔', '용': '🐲', '뱀': '🐍', '토끼': '🐰',
+            '고양이': '🐱', '강아지': '🐶', '병아리': '🐣', '송아지': '🐮', '사자': '🦁', '호랑이': '🐯', '코끼리': '🐘', '기린': '🦒',
+            '하마': '🦛', '악어': '🐊', '원숭이': '🐵', '다람쥐': '🐿️', '펭귄': '🐧', '얼룩말': '🦓', '꾀꼬리': '🐦', '풀벌레': '🐛',
+            '딱따구리': '🐦', '개구리': '🐸', '아저씨': '👨'
+        };
+        const shopItems = [
+            { id: 'hat1', name: '빨간 모자', price: 100, type: 'hat', className: 'hat-style-1' },
+            { id: 'glasses1', name: '검정 선글라스', price: 150, type: 'glasses', className: 'glasses-style-1' },
+        ];
+
+        // --- Keyboard & Hangul Data ---
+        const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const JUNGSUNG_LIST = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+        const JONGSUNG_LIST = ['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+        const JAMO_TO_KEY = {
+            'ㄱ':'r', 'ㄲ':'R', 'ㄴ':'s', 'ㄷ':'e', 'ㄸ':'E', 'ㄹ':'f', 'ㅁ':'a', 'ㅂ':'q', 'ㅃ':'Q', 'ㅅ':'t', 'ㅆ':'T',
+            'ㅇ':'d', 'ㅈ':'w', 'ㅉ':'W', 'ㅊ':'c', 'ㅋ':'z', 'ㅌ':'x', 'ㅍ':'v', 'ㅎ':'g',
+            'ㅏ':'k', 'ㅐ':'o', 'ㅑ':'i', 'ㅒ':'O', 'ㅓ':'j', 'ㅔ':'p', 'ㅕ':'u', 'ㅖ':'P',
+            'ㅗ':'h', 'ㅛ':'y', 'ㅜ':'n', 'ㅠ':'b', 'ㅡ':'m', 'ㅣ':'l',
+            ' ': 'space',
+            'ㅘ': ['h', 'k'], 'ㅙ': ['h', 'o'], 'ㅚ': ['h', 'l'], 'ㅝ': ['n', 'j'], 'ㅞ': ['n', 'p'], 'ㅟ': ['n', 'l'], 'ㅢ': ['m', 'l'],
+            'ㄳ': ['r', 't'], 'ㄵ': ['s', 'w'], 'ㄶ': ['s', 'g'], 'ㄺ': ['f', 'r'], 'ㄻ': ['f', 'a'], 'ㄼ': ['f', 'q'], 'ㄽ': ['f', 't'], 'ㄾ': ['f', 'x'], 'ㄿ': ['f', 'v'], 'ㅀ': ['f', 'g'], 'ㅄ': ['q', 't']
+        };
+
+        // --- Game State ---
+        let gameState = {};
+        let currentLevelWords = [], currentWordIndex = 0, isPlaying = false, time = 0, timer, totalTyped = 0, totalCorrect = 0;
+        let isMusicPlaying = false;
+        let musicSynth, musicSequence, tickSound, errorSound, successSound;
+
+        // --- Core Functions ---
+        function init() {
+            loadGameState();
+            document.querySelectorAll('.level-btn').forEach(b => b.addEventListener('click', () => startGame(b.dataset.level)));
+            wordInput.addEventListener('input', handleInput);
+            wordInput.addEventListener('keydown', handleEnterPress);
+            document.addEventListener('keydown', handleKeyboardPress);
+            document.addEventListener('keyup', handleKeyboardRelease);
+            restartBtn.addEventListener('click', () => { gameArea.classList.add('hidden'); levelSelection.classList.remove('hidden'); resetStats(); });
+            messageCloseBtn.addEventListener('click', hideMessageBox);
+            shopOpenBtn.addEventListener('click', openShop);
+            shopCloseBtn.addEventListener('click', () => shopModal.classList.add('hidden'));
+            musicToggleBtn.addEventListener('click', toggleMusic);
+            shopItemsGrid.addEventListener('click', handleShopClick);
+            setupSounds();
+            toggleMusic(); // Start music by default
+        }
+
+        async function startGame(level) {
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+            }
+            levelSelection.classList.add('hidden');
+            gameArea.classList.remove('hidden');
+            currentLevelWords = [...words[level]].sort(() => 0.5 - Math.random());
+            currentWordIndex = 0;
+            isPlaying = false;
+            resetStats();
+            showNextWord();
+            wordInput.value = '';
+            wordInput.disabled = false;
+            wordInput.focus();
+        }
+
+        function handleInput() {
+            if (!isPlaying && wordInput.value.length > 0) {
+                isPlaying = true;
+                timer = setInterval(updateTime, 1000);
+            }
+            const targetText = currentLevelWords[currentWordIndex] || '';
+            const typedText = wordInput.value;
+            
+            if (tickSound) tickSound.triggerAttackRelease('C5', '16n');
+            warningMessage.textContent = '';
+
+            // Update text color on the display
+            const displaySpans = wordDisplay.querySelectorAll('span');
+            displaySpans.forEach((charSpan, index) => {
+                const typedChar = typedText[index];
+                if (typedChar == null) {
+                    charSpan.className = '';
+                } else if (typedChar === charSpan.innerText) {
+                    charSpan.className = 'text-green-500 font-bold';
+                }
+            });
+
+            if (typedText === targetText) {
+                wordInput.classList.add('border-green-500', 'focus:border-green-500');
+            } else {
+                wordInput.classList.remove('border-green-500'); // Removed the focus class removal
+            }
+
+            updateKeyboardHighlight();
+            updateStats();
+        }
+
+        function handleEnterPress(event) {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            const currentTypedText = wordInput.value;
+            const targetText = currentLevelWords[currentWordIndex] || '';
+
+            if (currentTypedText === targetText && targetText.length > 0) {
+                if (successSound) successSound.triggerAttackRelease('G5', '8n');
+                const earnedCoins = targetText.length * 5;
+                gameState.coins += earnedCoins;
+                showCoinEffect(earnedCoins);
+                updateCoinDisplay();
+                saveGameState();
+                totalTyped += targetText.length;
+                totalCorrect += targetText.length;
+                currentWordIndex++;
+                wordInput.value = '';
+                wordInput.classList.remove('border-green-500', 'focus:border-green-500');
+                wordDisplay.classList.add('correct-animation');
+                setTimeout(() => wordDisplay.classList.remove('correct-animation'), 500);
+                showNextWord();
+                updateStats();
+             }
+        }
+
+        function endGame() {
+            isPlaying = false;
+            clearInterval(timer);
+            wordInput.disabled = true;
+            wordDisplay.innerHTML = "<span class='text-green-500'>🎉 레벨 완료! 🎉</span>";
+            imageDisplay.textContent = '👍';
+            updateKeyboardHighlight();
+            showMessageBox('참 잘했어요!', `최종 타수는 ${wpmEl.innerText}, 정확도는 ${accuracyEl.innerText}% 입니다!`);
+        }
+
+        // --- Stat & Display Functions ---
+        function resetStats() {
+            clearInterval(timer);
+            time = 0;
+            totalTyped = 0;
+            totalCorrect = 0;
+            accuracyEl.innerText = '100';
+            wpmEl.innerText = '0';
+        }
+
+        function showNextWord() {
+            imageDisplay.textContent = '';
+            if (currentWordIndex >= currentLevelWords.length) {
+                endGame();
+                return;
+            }
+            const word = currentLevelWords[currentWordIndex];
+            wordDisplay.innerHTML = word.split('').map(char => `<span>${char}</span>`).join('');
+            let foundEmoji = null;
+            for (const animal in wordToEmoji) {
+                if (word.includes(animal)) {
+                    foundEmoji = wordToEmoji[animal];
+                    break;
+                }
+            }
+            if (foundEmoji) {
+                imageDisplay.textContent = foundEmoji;
+            }
+            updateKeyboardHighlight();
+        }
+
+        function updateTime() {
+            time++;
+            updateStats();
+        }
+
+        function updateStats() {
+            if (time > 0) {
+                const wpm = Math.round((totalTyped / 5) / (time / 60));
+                wpmEl.innerText = isNaN(wpm) ? 0 : wpm;
+            }
+            const accuracy = totalTyped > 0
+                ? Math.round((totalCorrect / totalTyped) * 100)
+                : 100;
+            accuracyEl.innerText = isNaN(accuracy) ? 100 : accuracy;
+        }
+
+        function showMessageBox(title, text) {
+            const el = document.getElementById('message-box');
+            el.querySelector('#message-title').innerText = title;
+            el.querySelector('#message-text').innerText = text;
+            el.classList.remove('hidden');
+        }
+
+        function hideMessageBox() {
+            document.getElementById('message-box').classList.add('hidden');
+            gameArea.classList.add('hidden');
+            levelSelection.classList.remove('hidden');
+        }
+
+        // --- Keyboard Highlight Functions ---
+        function decompose(char) {
+            if (!char) return [];
+            if (char === ' ') return [' '];
+            const charCode = char.charCodeAt(0);
+            if (charCode >= 0xAC00 && charCode <= 0xD7A3) {
+                const hangulIndex = charCode - 0xAC00;
+                const chosungIndex = Math.floor(hangulIndex / (21 * 28));
+                const jungsungIndex = Math.floor((hangulIndex % (21 * 28)) / 28);
+                const jongsungIndex = hangulIndex % 28;
+                const jamos = [CHOSUNG_LIST[chosungIndex], JUNGSUNG_LIST[jungsungIndex]];
+                if (jongsungIndex > 0) {
+                    jamos.push(JONGSUNG_LIST[jongsungIndex]);
+                }
+                return jamos;
+            }
+            if (Object.keys(JAMO_TO_KEY).includes(char)) {
+                return [char];
+            }
+            return [char];
+        }
+
+        function updateKeyboardHighlight() {
+            keyboardKeys.forEach(k => k.classList.remove('key-highlight'));
+            const targetText = currentLevelWords[currentWordIndex] || '';
+            const typedText = wordInput.value;
+            let correctLen = 0;
+            while (correctLen < typedText.length && typedText[correctLen] === targetText[correctLen]) {
+                correctLen++;
+            }
+            if (correctLen >= targetText.length) return;
+
+            const targetChar = targetText[correctLen];
+            const targetJamos = decompose(targetChar);
+
+            // Find the current jamo being typed
+            const typedJamos = decompose(typedText[correctLen] || '');
+
+            let nextJamo = null;
+            if (typedJamos.length === 0) {
+                nextJamo = targetJamos[0];
+            } else {
+                let foundMatch = false;
+                for (let i = 0; i < typedJamos.length; i++) {
+                    if (typedJamos[i] !== targetJamos[i]) {
+                        // User typed something wrong, highlight the correct one
+                        nextJamo = targetJamos[i];
+                        foundMatch = true;
+                        break;
+                    }
+                }
+                if (!foundMatch && typedJamos.length < targetJamos.length) {
+                    nextJamo = targetJamos[typedJamos.length];
+                }
+            }
+
+            if (nextJamo) {
+                const keyData = JAMO_TO_KEY[nextJamo];
+                if (keyData) {
+                    const keysToHighlight = Array.isArray(keyData) ? keyData : [keyData];
+                    keysToHighlight.forEach(k => {
+                        const keyElement = document.querySelector(`.key[data-key="${k.toLowerCase()}"]`);
+                        if (keyElement) {
+                             keyElement.classList.add('key-highlight');
+                        }
+                    });
+                }
+            }
+        }
+        
+        function handleKeyboardPress(e) {
+            const key = e.key.toLowerCase();
+            const keyElement = document.querySelector(`.key[data-key="${key}"]`);
+            if (keyElement) {
+                keyElement.classList.add('key-active');
+            } else if (e.key === 'Shift') {
+                document.querySelectorAll(`.key[data-key="shift"]`).forEach(el => el.classList.add('key-active'));
+            }
+        }
+
+        function handleKeyboardRelease(e) {
+            const key = e.key.toLowerCase();
+            const keyElement = document.querySelector(`.key[data-key="${key}"]`);
+            if (keyElement) {
+                keyElement.classList.remove('key-active');
+            } else if (e.key === 'Shift') {
+                document.querySelectorAll(`.key[data-key="shift"]`).forEach(el => el.classList.remove('key-active'));
+            }
+        }
+
+        // --- Sound Functions ---
+        function setupSounds() {
+            musicSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } }).toDestination();
+            const melody = ['C4', 'E4', 'G4', 'E4', 'D4', 'F4', 'A4', 'F4'];
+            musicSequence = new Tone.Sequence((time, note) => { musicSynth.triggerAttackRelease(note, 0.1, time); }, melody, '4n');
+            Tone.Transport.bpm.value = 100;
+            musicSequence.loop = true;
+
+            tickSound = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'triangle' },
+                envelope: { attack: 0.005, decay: 0.1, sustain: 0.05, release: 0.1 }
+            }).toDestination();
+            tickSound.set({ volume: -12 });
+
+            errorSound = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'square' },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0, release: 0.2 }
+            }).toDestination();
+            errorSound.set({ volume: -8 });
+
+            successSound = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: 'sine' },
+                envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.2 }
+            }).toDestination();
+            successSound.set({ volume: -6 });
+        }
+
+        async function toggleMusic() {
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+            }
+            if (isMusicPlaying) {
+                Tone.Transport.stop();
+                musicToggleBtn.textContent = '🔇';
+            } else {
+                Tone.Transport.start();
+                musicSequence.start(0);
+                musicToggleBtn.textContent = '🔈';
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        // --- Character & Shop Functions ---
+        function showCoinEffect(amount) {
+            const c = document.getElementById('coin-effect-container');
+            const e = document.createElement('div');
+            e.className = 'coin-effect';
+            e.innerText = `+${amount} 💰`;
+            c.appendChild(e);
+            setTimeout(() => { e.remove(); }, 1000);
+        }
+
+        function loadGameState() {
+            const d = JSON.parse(localStorage.getItem('typingGameState'));
+            gameState = {
+                coins: 0,
+                purchasedItems: [],
+                equippedItems: { hat: null, glasses: null },
+                ...d
+            };
+            updateCoinDisplay();
+            renderCharacter();
+        }
+
+        function saveGameState() {
+            localStorage.setItem('typingGameState', JSON.stringify(gameState));
+        }
+
+        function updateCoinDisplay() {
+            coinDisplay.innerText = gameState.coins;
+            shopCoinDisplay.innerText = gameState.coins;
+        }
+
+        function renderCharacter() {
+            hatSlot.innerHTML = '';
+            glassesSlot.innerHTML = '';
+            if (gameState.equippedItems.hat) {
+                const i = shopItems.find(it => it.id === gameState.equippedItems.hat);
+                if (i) hatSlot.innerHTML = `<div class="${i.className}"></div>`;
+            }
+            if (gameState.equippedItems.glasses) {
+                const i = shopItems.find(it => it.id === gameState.equippedItems.glasses);
+                if (i) glassesSlot.innerHTML = `<div class="${i.className}"></div>`;
+            }
+        }
+
+        function openShop() {
+            shopItemsGrid.innerHTML = '';
+            shopItems.forEach(item => {
+                const isPurchased = gameState.purchasedItems.includes(item.id);
+                const isEquipped = gameState.equippedItems[item.type] === item.id;
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-lg shadow';
+                let btn;
+
+                if (isEquipped) {
+                    btn = `<button class="w-full mt-2 bg-gray-400 text-white py-1 rounded cursor-not-allowed" disabled>장착중</button>`;
+                } else if (isPurchased) {
+                    btn = `<button data-item-id="${item.id}" data-item-type="${item.type}" class="w-full mt-2 bg-green-500 hover:bg-green-600 text-white py-1 rounded equip-btn">장착하기</button>`;
+                } else {
+                    btn = `<button data-item-id="${item.id}" class="w-full mt-2 bg-blue-500 hover:bg-blue-600 text-white py-1 rounded buy-btn">💰 ${item.price}</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="w-20 h-20 bg-gray-200 mx-auto rounded-md flex items-center justify-center font-bold text-gray-500">${item.name}</div>
+                    ${btn}
+                `;
+                shopItemsGrid.appendChild(card);
+            });
+            updateCoinDisplay();
+            shopModal.classList.remove('hidden');
+        }
+
+        function handleShopClick(e) {
+            if (e.target.matches('.buy-btn')) {
+                const itemId = e.target.dataset.itemId;
+                const item = shopItems.find(it => it.id === itemId);
+                if (gameState.coins >= item.price) {
+                    gameState.coins -= item.price;
+                    gameState.purchasedItems.push(item.id);
+                    updateCoinDisplay();
+                    saveGameState();
+                    openShop();
+                } else {
+                    showMessageBox('코인 부족!', '아이템을 구매하기 위한 코인이 부족합니다.');
+                }
+            } else if (e.target.matches('.equip-btn')) {
+                const itemId = e.target.dataset.itemId;
+                const itemType = e.target.dataset.itemType;
+                gameState.equippedItems[itemType] = itemId;
+                saveGameState();
+                renderCharacter();
+                openShop();
+            }
+        }
+
+        // --- Start the engine! ---
+        init();
+    </script>
+</body>
+</html>
